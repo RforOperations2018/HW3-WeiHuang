@@ -1,0 +1,52 @@
+---
+title: "Assignment3"
+author: "Wei Huang"
+date: "9/27/2018"
+output: html_document
+---
+
+```{r }
+library(shiny)
+library(shinythemes)
+library(leaflet)
+library(leaflet.extras)
+library(rgdal)
+library(shinyjs)
+library(rgeos)
+
+```
+# Load polygons, points and lines data
+```{r}
+playG.load <- readOGR("https://data.wprdc.org/dataset/37e7a776-c98b-4e08-ad61-a8c8e23ec9ab/resource/12d59d62-e86d-4f37-af19-463050496ed6/download/playgrounds_img.geojson")
+waterF.load <- readOGR("https://data.wprdc.org/dataset/fe7cfb11-9f33-4590-a5ee-04419f3f974a/resource/f7c252a5-28be-43ab-95b5-f3eb0f1eef67/download/wf_img.geojson")
+interM.load <- readOGR("https://data.wprdc.org/dataset/31ce085b-87b9-4ffd-adbb-0a9f5b3cf3df/resource/f86f1950-3b73-46f9-8bd4-2991ea99d7c4/download/markingsimg.geojson")
+
+```
+# Creat a color platte (putting my favourite color set (Set1) into the color palette)
+```{r}
+library(RColorBrewer)
+#brewer.pal(n = 8, name = "Set1")
+pal5 <- colorFactor(palette = c( "#E41A1C","#377EB8","#4DAF4A","#984EA3","#FF7F00","#FFFF33"), 
+                    domain = interM.load$type)
+
+```
+
+# Creat a map
+```{r}
+leaflet() %>% 
+  #Increat basemaps, the OpenStreet Map and the BalckAndWhite Map, and then create bottoms for choosing between two maps
+  addTiles(group = "OpenStreetMap.Mapnik(default)")%>%
+  addProviderTiles("OpenStreetMap.BlackAndWhite", group = "BW") %>%
+  addLayersControl(baseGroups = c("OpenStreetMap.Mapnik(default)", "BW"),
+                   options = layersControlOptions(collapsed = FALSE)) %>%
+  #Add polygons for Pttsburgh playgrounds 
+  addPolygons(data = playG.load, color = "#8DD3C7") %>%
+  #Add points depicting water features in Pittsburgh
+  addMarkers(data = waterF.load) %>%
+  #Add lines for intersction markings in Pittsburgh
+  addPolylines(data = interM.load, color = ~ pal5(type)) %>%
+  #Add legends for types of intersection markings
+  addLegend(position = "bottomright" , pal = pal5, values = interM.load$type, title = "Type") %>%
+  setView(-80, 40.45, 12)
+```
+
